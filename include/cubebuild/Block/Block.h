@@ -25,9 +25,7 @@ class Block {
         void set_position(const glm::vec3 &position);
         void set_block_type(BlockType block_type);
         void set_active(bool active);
-
         void create_block_mesh(const Texture& texture);
-
         bool is_active();
         glm::vec3 get_coords();
 

@@ -17,6 +17,7 @@ set(SOURCES src/main.cpp
             src/cubebuild/Utility/PerlinNoise.cpp
             src/cubebuild/Utility/Generator.cpp
             src/cubebuild/Texture.cpp
+            src/cubebuild/Skybox.cpp
 )
 
 set(HEADERS third_party/stb_image/include
@@ -27,6 +28,7 @@ set(HEADERS third_party/stb_image/include
             include/cubebuild/Utility
             include/cubebuild/World
             include/cubebuild/Texture
+            include/cubebuild/Skybox
 )
 
 add_library(imgui STATIC 

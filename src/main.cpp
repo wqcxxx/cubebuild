@@ -3,10 +3,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #include <Shader.h>
 #include <Block.h>
@@ -16,6 +18,7 @@
 #include <Generator.h>
 //#include <World.h> //needs to be done
 #include <Texture.h>
+#include <Skybox.h>
 
 #include <iostream>
 #include <vector>
@@ -87,17 +90,20 @@ int main()
 
     std::filesystem::path vertex_shader_path = std::filesystem::current_path().parent_path() / "resources/shaders/vertex_shader.glsl";
     std::filesystem::path fragment_shader_path = std::filesystem::current_path().parent_path() / "resources/shaders/fragment_shader.glsl";
+    std::filesystem::path skybox_vertex_path = std::filesystem::current_path().parent_path() / "resources/shaders/skybox_vertex.glsl";
+    std::filesystem::path skybox_fragment_path = std::filesystem::current_path().parent_path() / "resources/shaders/skybox_fragment.glsl";
+
     std::filesystem::path texture_path = std::filesystem::current_path().parent_path() / "resources/textures/sprites.png";
 
     Shader shader(vertex_shader_path.c_str(), fragment_shader_path.c_str());
     Texture texture_sprites(texture_path.c_str(), 2);
+    Skybox skybox; 
+    Shader skybox_shader(skybox_vertex_path.c_str(), skybox_fragment_path.c_str());
 
     Generator generator(43532);
-
     Chunk chunk(0, 0);
 
     generator.generate_terrain(chunk, texture_sprites);
-    //World world = World(164126);
     
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -149,6 +155,7 @@ int main()
         shader.set_mat4("projection", projection);
         
         chunk.render(shader);
+        skybox.draw(skybox_shader, view, projection);
         
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
