@@ -95,10 +95,10 @@ int main()
 
     std::filesystem::path texture_path = std::filesystem::current_path().parent_path() / "resources/textures/sprites.png";
 
-    Shader shader(vertex_shader_path.c_str(), fragment_shader_path.c_str());
-    Texture texture_sprites(texture_path.c_str(), 2);
+    Shader shader(vertex_shader_path.string().c_str(), fragment_shader_path.string().c_str());
+    Texture texture_sprites(texture_path.string().c_str(), 2);
     Skybox skybox; 
-    Shader skybox_shader(skybox_vertex_path.c_str(), skybox_fragment_path.c_str());
+    Shader skybox_shader(skybox_vertex_path.string().c_str(), skybox_fragment_path.string().c_str());
 
     Generator generator(43532);
     Chunk chunk(0, 0);
@@ -106,9 +106,6 @@ int main()
     generator.generate_terrain(chunk, texture_sprites);
     
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
 
     shader.use();
     shader.set_int("texture1", 0);

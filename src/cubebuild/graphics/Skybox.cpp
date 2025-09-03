@@ -87,7 +87,7 @@ GLuint Skybox::load_cubemap()
     for (unsigned int i = 0; i < m_faces.size(); ++i)
     {
         std::filesystem::path texture = std::filesystem::current_path().parent_path() / "resources/cubemap/" / m_faces[i];
-        unsigned char *data = stbi_load(texture.c_str(), &width, &height, &nr_channels, 0);
+        unsigned char *data = stbi_load(texture.string().c_str(), &width, &height, &nr_channels, 0);
 
         if (data)
         {
