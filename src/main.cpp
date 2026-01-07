@@ -1,8 +1,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -20,19 +22,17 @@
 #include <Texture.h>
 #include <Skybox.h>
 
+#include <Window.h>
+#include <UIManager.h>
+#include <GLContextManager.h>
+
 #include <iostream>
 #include <vector>
 #include <filesystem>
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void process_input(GLFWwindow *window);
-void mouse_callback(GLFWwindow *window, double x_pos_in, double y_pos_in);
-void scroll_callback(GLFWwindow *window, double x_offset, double y_offset);
-
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
-Camera camera(glm::vec3(16.0f, 32.0f, 16.0f));
 float last_x = SCR_WIDTH / 2;
 float last_y = SCR_HEIGHT / 2;
 bool first_movement = true;
@@ -40,53 +40,27 @@ bool first_movement = true;
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
+void process_input(Window& win);
+
 int main()
 {
-    glfwInit();
-    const char* glsl_version = "#version 330";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    Window window;
+    window.initialize_glfw();
+    window.create_window(SCR_WIDTH, SCR_HEIGHT, "cubebuild");
+    window.get_camera().position = glm::vec3(16.0f, 32.0f, 16.0f);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+    window.set_camera_variables(last_x, last_y, first_movement);
+    window.setup_callbacks();
+    window.set_swap_internal();
+    window.set_input_mode();
 
-    float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "cubebuild", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+    GLContextManager gl_context_manager;
 
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSwapInterval(1);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale);
-    style.FontScaleDpi = main_scale;
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    UIManager ui_manager;
+    ui_manager.setup_imgui_context();
+    ui_manager.set_dark_style();
+    ui_manager.setup_scaling();
+    ui_manager.glfw_opengl_init(window, "#version 330 core");
 
     std::filesystem::path vertex_shader_path = std::filesystem::current_path().parent_path() / "resources/shaders/vertex_shader.glsl";
     std::filesystem::path fragment_shader_path = std::filesystem::current_path().parent_path() / "resources/shaders/fragment_shader.glsl";
@@ -100,35 +74,22 @@ int main()
     Skybox skybox; 
     Shader skybox_shader(skybox_vertex_path.string().c_str(), skybox_fragment_path.string().c_str());
 
-    Generator generator(43532);
+    Generator generator(213654);
     Chunk chunk(0, 0);
 
     generator.generate_terrain(chunk, texture_sprites);
     
-    glEnable(GL_DEPTH_TEST);
+    gl_context_manager.enable_depth_test(true);
 
     shader.use();
     shader.set_int("texture1", 0);
 
-    while (!glfwWindowShouldClose(window))
+    while (!window.should_close())
     {
-        glfwPollEvents();
+        window.poll_events();
 
-        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0)
-        {
-            ImGui_ImplGlfw_Sleep(10);
-            continue;
-        }
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        {
-            ImGui::Begin("position");
-            ImGui::Text("position: %f, %f, %f", camera.get_position().x, camera.get_position().y, camera.get_position().z);
-            ImGui::End();
-        }
+        ui_manager.imgui_glfw_opengl_new_frame();
+        ui_manager.new_frame();
 
         float current_frame = static_cast<float>(glfwGetTime());
         delta_time = current_frame - last_frame;
@@ -138,12 +99,13 @@ int main()
 
         process_input(window);
 
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gl_context_manager.clear_color(0.05f, 0.05f, 0.05f, 1.0f);
+        gl_context_manager.gl_clear();
 
         glm::mat4 view       = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
 
+        Camera& camera = window.get_camera();
         projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view       = camera.get_view_matrix(); 
 
@@ -153,28 +115,18 @@ int main()
         
         chunk.render(shader);
         skybox.draw(skybox_shader, view, projection);
-        
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfwSwapBuffers(window);
+
+        ui_manager.render();
+        window.swap_buffers();
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void process_input(Window& win)
 {
-    glViewport(0, 0, width, height);
-}
+    GLFWwindow* window = win.get_window();
+    Camera& camera = win.get_camera();
 
-void process_input(GLFWwindow* window)
-{
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwWindowShouldClose(window);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.process_keyboard(FORWARD, delta_time);
@@ -183,28 +135,3 @@ void process_input(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.process_keyboard(RIGHT, delta_time);
 }
 
-void mouse_callback(GLFWwindow *window, double x_pos_in, double y_pos_in)
-{
-    float x_pos = static_cast<float>(x_pos_in);
-    float y_pos = static_cast<float>(y_pos_in);
-
-    if (first_movement)
-    {
-        last_x = x_pos;
-        last_y = y_pos;
-        first_movement = false;
-    }
-
-    float x_offset = x_pos - last_x;
-    float y_offset = last_y - y_pos;
-
-    last_x = x_pos;
-    last_y = y_pos;
-
-    camera.process_mouse_movement(x_offset, y_offset);
-}
-
-void scroll_callback(GLFWwindow *window, double x_offset, double y_offset)
-{
-    camera.process_mouse_scroll(static_cast<float>(y_offset));
-}

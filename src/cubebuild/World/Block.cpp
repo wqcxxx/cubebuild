@@ -67,6 +67,7 @@ void Block::setup_mesh()
 glm::vec3 Block::get_coords() 
 {
     if (this->is_active()) return this->m_position;
+    else return glm::vec3(-1.0f, -1.0f, -1.0f);
 }
 
 void Block::create_block_mesh(const Texture& texture)
