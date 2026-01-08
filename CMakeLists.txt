@@ -89,7 +89,8 @@ set(SOURCES src/main.cpp
             src/cubebuild/core/FrustumCulling.cpp 
             src/cubebuild/core/Generator.cpp 
             src/cubebuild/core/PerlinNoise.cpp 
-            src/cubebuild/game/Game.cpp 
+            src/cubebuild/game/Game.cpp
+            src/cubebuild/game/Player.cpp 
             src/cubebuild/graphics/Shader.cpp 
             src/cubebuild/graphics/Skybox.cpp 
             src/cubebuild/graphics/Texture.cpp 
@@ -110,14 +111,11 @@ set(HEADERS third_party/stb_image/include
             third_party/glad/include
 )
 
-# GLAD
 add_library(glad third_party/glad/src/glad.c)
 target_include_directories(glad PUBLIC third_party/glad/include)
 
-# GLFW
-find_package(glfw3 REQUIRED)  # Используем обычный find_package
+find_package(glfw3 REQUIRED)  
 
-# ImGui - ДОБАВЛЯЕМ ЛИНКОВКУ С GLFW!
 add_library(imgui STATIC 
         third_party/imgui/imgui.cpp
         third_party/imgui/imgui_draw.cpp
@@ -131,10 +129,8 @@ target_include_directories(imgui PUBLIC
         third_party/imgui
 )
 
-# КРИТИЧЕСКИ ВАЖНО: линкуем imgui с glfw
 target_link_libraries(imgui PUBLIC glfw)
 
-# Главный исполняемый файл
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
@@ -144,11 +140,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         third_party/imgui
 )
 
-# ВАЖНЫЙ ПОРЯДОК ЛИНКОВКИ!
 target_link_libraries(${PROJECT_NAME} PRIVATE
     glad
-    glfw      # Сначала низкоуровневые библиотеки
+    glfw      
     OpenGL::GL
-    imgui     # Затем imgui (которая уже знает о glfw)
+    imgui     
     glm::glm
 )

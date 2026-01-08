@@ -1,17 +1,14 @@
 // #include "World.h"
 
-// // World::World(unsigned int seed) : m_seed(seed) 
-// // {
-    
-// // }
+// World::World(unsigned int seed) : m_seed(seed) {}
 
 // World::~World() {}
 
-// void World::setup_chunk(Chunk* chunk)
+// void World::setup_chunk(Chunk* chunk, const Texture& texture)
 // {
 //     if (!chunk->has_flag(Chunk::is_generated))
 //     {
-//         m_generator.generate_terrain(chunk);
+//         m_generator.generate_terrain(chunk, texture);
 //         chunk->set_flag(Chunk::is_generated, true);
 //     }
 // }
@@ -21,14 +18,14 @@
 //     return ((size_t)x << 32 | (size_t)z); 
 // }
 
-// void World::load_chunk(int x, int z)
+// void World::load_chunk(int x, int z, const Texture& texture)
 // {
 //     auto chunk = std::make_unique<Chunk>(x, z);
-//     this->setup_chunk(chunk.get());
+//     this->setup_chunk(chunk.get(), texture);
 //     chunks[{x, z}] = std::move(chunk);
 // }
 
-// void World::render(Shader& shader)
+// void World::render(Shader& shader, const Texture& texture)
 // {
 //     //glm::vec3 player_position = camera.get_position();
 

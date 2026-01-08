@@ -21,6 +21,7 @@
 //#include <World.h> //needs to be done
 #include <Texture.h>
 #include <Skybox.h>
+#include <Player.h>
 
 #include <Window.h>
 #include <UIManager.h>
@@ -33,23 +34,15 @@
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
-float last_x = SCR_WIDTH / 2;
-float last_y = SCR_HEIGHT / 2;
-bool first_movement = true;
-
-float delta_time = 0.0f;
-float last_frame = 0.0f;
-
 void process_input(Window& win);
 
 int main()
 {
+    Player player;
     Window window;
     window.initialize_glfw();
     window.create_window(SCR_WIDTH, SCR_HEIGHT, "cubebuild");
-    window.get_camera().position = glm::vec3(16.0f, 32.0f, 16.0f);
-
-    window.set_camera_variables(last_x, last_y, first_movement);
+    player.set_camera(window);
     window.setup_callbacks();
     window.set_swap_internal();
     window.set_input_mode();
@@ -88,16 +81,14 @@ int main()
     {
         window.poll_events();
 
+        player.update(window);
+
         ui_manager.imgui_glfw_opengl_new_frame();
         ui_manager.new_frame();
 
-        float current_frame = static_cast<float>(glfwGetTime());
-        delta_time = current_frame - last_frame;
-        last_frame = current_frame;
-
         texture_sprites.bind(GL_TEXTURE0);
 
-        process_input(window);
+        player.handle_movement(window);
 
         gl_context_manager.clear_color(0.05f, 0.05f, 0.05f, 1.0f);
         gl_context_manager.gl_clear();
@@ -105,7 +96,7 @@ int main()
         glm::mat4 view       = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
 
-        Camera& camera = window.get_camera();
+        Camera& camera = player.get_camera(window);
         projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view       = camera.get_view_matrix(); 
 
@@ -122,16 +113,4 @@ int main()
     return 0;
 }
 
-void process_input(Window& win)
-{
-    GLFWwindow* window = win.get_window();
-    Camera& camera = win.get_camera();
-
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwWindowShouldClose(window);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.process_keyboard(FORWARD, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.process_keyboard(BACKWARD, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.process_keyboard(LEFT, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.process_keyboard(RIGHT, delta_time);
-}
 

@@ -1,4 +1,4 @@
-//#pragma once
+// #pragma once
 
 // #include <Shader.h>
 // #include <Chunk.h>
@@ -35,9 +35,9 @@
 
 //         void update();
 //         void update_dirty_chunks();
-//         void setup_chunk(Chunk* chunk);
-//         void load_chunk(int x, int y);
-//         void render(Shader& shader);
+//         void setup_chunk(Chunk* chunk, const Texture& texture);
+//         void load_chunk(int x, int y, const Texture& texture);
+//         void render(Shader& shader, const Texture& texture);
 //         void set_to_dirty_chunks(std::unique_ptr<Chunk> chunk);
 
 //         void set_render_distance(int render_distance);
