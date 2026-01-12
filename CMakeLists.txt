@@ -85,7 +85,6 @@ find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 
 set(SOURCES src/main.cpp
-            src/cubebuild/core/Camera.cpp 
             src/cubebuild/core/FrustumCulling.cpp 
             src/cubebuild/core/Generator.cpp 
             src/cubebuild/core/PerlinNoise.cpp 

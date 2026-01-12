@@ -59,12 +59,30 @@ void UIManager::render()
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void UIManager::show_player_position(const glm::vec3& player_position)
+void UIManager::show_player_position(Player& player)
 {
-    ImGui::Begin("position");
-    ImGui::Text("position: %f.2f, %f.2f, %f.2f", 
-                 player_position.x, player_position.y, player_position.z);
-    ImGui::End();
+    glm::vec3 player_position = player.get_player_position();
+
+    if (is_visible_position)
+    {
+        ImGui::Begin("position");
+        ImGui::Text("position: %f.2f, %f.2f, %f.2f", 
+                     player_position.x, player_position.y, player_position.z);
+        ImGui::End();
+    }    
+}
+
+void UIManager::show_speed_window(Player& player)
+{
+    float velocity  = player.get_speed();
+    
+    if (is_visible_change_speed)
+    {
+        ImGui::Begin("Change speed");
+        ImGui::SliderFloat("float", &velocity, 0.0f, 1.0f);
+        player.set_speed(velocity);
+        ImGui::End();
+    }
 }
 
 void UIManager::new_frame()
@@ -75,4 +93,18 @@ void UIManager::new_frame()
 void UIManager::end_frame()
 {
     ImGui::EndFrame();
+}
+
+void UIManager::process_input(Window& window)
+{
+    GLFWwindow* win = window.get_window();
+
+    if (glfwGetKey(win, GLFW_KEY_R) == GLFW_PRESS) this->is_visible_position = true;
+    if (glfwGetKey(win, GLFW_KEY_T) == GLFW_PRESS) this->is_visible_change_speed = true;
+    
+    if (glfwGetKey(win, GLFW_KEY_X) == GLFW_PRESS) 
+    {
+        this->is_visible_change_speed = false;
+        this->is_visible_position = false;
+    }
 }

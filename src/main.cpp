@@ -15,7 +15,7 @@
 #include <Shader.h>
 #include <Block.h>
 #include <BlockType.h>
-#include <Camera.h>
+//#include <Camera.h>
 #include <Chunk.h>
 #include <Generator.h>
 //#include <World.h> //needs to be done
@@ -34,16 +34,16 @@
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
-void process_input(Window& win);
-
 int main()
 {
-    Player player;
     Window window;
     window.initialize_glfw();
     window.create_window(SCR_WIDTH, SCR_HEIGHT, "cubebuild");
-    player.set_camera(window);
-    window.setup_callbacks();
+    
+    Player player(glm::vec3(16.0f, 32.0f, 16.0f));
+    player.setup_callbacks(window.get_window());
+    player.set_camera_variables(SCR_WIDTH / 2, SCR_HEIGHT / 2, true);
+    
     window.set_swap_internal();
     window.set_input_mode();
 
@@ -77,18 +77,27 @@ int main()
     shader.use();
     shader.set_int("texture1", 0);
 
+    float delta_time = 0.0f;
+    float last_frame = 0.0f;
+
     while (!window.should_close())
     {
         window.poll_events();
 
-        player.update(window);
+        float current_frame = static_cast<float>(glfwGetTime());
+        delta_time = current_frame - last_frame;
+        last_frame = current_frame;
 
+        player.handle_movement(window.get_window(), delta_time);
+    
         ui_manager.imgui_glfw_opengl_new_frame();
         ui_manager.new_frame();
+        ui_manager.process_input(window);
+        
+        ui_manager.show_player_position(player);
+        ui_manager.show_speed_window(player);
 
         texture_sprites.bind(GL_TEXTURE0);
-
-        player.handle_movement(window);
 
         gl_context_manager.clear_color(0.05f, 0.05f, 0.05f, 1.0f);
         gl_context_manager.gl_clear();
@@ -96,9 +105,8 @@ int main()
         glm::mat4 view       = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
 
-        Camera& camera = player.get_camera(window);
-        projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view       = camera.get_view_matrix(); 
+        projection = glm::perspective(glm::radians(player.get_zoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view       = player.get_view_matrix(); 
 
         shader.use();
         shader.set_mat4("view", view);
@@ -110,6 +118,7 @@ int main()
         ui_manager.render();
         window.swap_buffers();
     }
+    
     return 0;
 }
 
